@@ -15,7 +15,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            name: windows
+          - os: ubuntu-latest
+            name: linux
+          - os: macos-latest
+            name: macos
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,14 +53,14 @@ jobs:
           autoreconf -i
           ./configure --disable-gifview --disable-gifdiff
           make
-          mv src/gifsicle gifsicle-${{ runner.os }}-${{ github.event.inputs.tag }}
+          mv src/gifsicle gifsicle-${{ matrix.name }}-${{ github.event.inputs.tag }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: gifsicle-${{ runner.os }}
           path: |
-            gifsicle*
+            gifsicle-*
 
   release:
     needs: build
