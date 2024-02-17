@@ -19,12 +19,18 @@ jobs:
         with:
           repository: "kohler/gifsicle"
           ref: ${{ github.event.inputs.tag }}
+      
+      - name: Setup Visual Studio Shell
+        if: matrix.os == 'windows-latest'
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
 
       - name: Windows Build
         if: matrix.os == 'windows-latest'
         working-directory: ./src
         run: |
-          make -f Makefile.w32
+          nmake -f Makefile.w32
           mv gifsicle.exe ../gifsicle-windows-${{ github.event.inputs.tag }}.exe
 
       - name: Install automake
