@@ -32,6 +32,7 @@ jobs:
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
+          autoreconf -i
           ./configure --disable-gifview --disable-gifdiff
           make
           mv gifsicle gifsicle-${{ runner.os }}-${{ github.event.inputs.tag }}
