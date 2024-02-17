@@ -25,7 +25,7 @@ jobs:
         shell: bash
         working-directory: ./src
         run: |
-          nmake -f Makefile.w32
+          make -f Makefile.w32
           mv gifsicle.exe ../gifsicle-windows-${{ github.event.inputs.tag }}.exe
 
       - name: Build
@@ -35,7 +35,7 @@ jobs:
           autoreconf -i
           ./configure --disable-gifview --disable-gifdiff
           make
-          mv gifsicle gifsicle-${{ runner.os }}-${{ github.event.inputs.tag }}
+          mv src/gifsicle gifsicle-${{ runner.os }}-${{ github.event.inputs.tag }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
