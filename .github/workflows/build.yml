@@ -22,11 +22,14 @@ jobs:
 
       - name: Windows Build
         if: matrix.os == 'windows-latest'
-        shell: bash
         working-directory: ./src
         run: |
           make -f Makefile.w32
           mv gifsicle.exe ../gifsicle-windows-${{ github.event.inputs.tag }}.exe
+
+      - name: Install automake
+        if: matrix.os == 'macos-latest'
+        run: brew install automake
 
       - name: Build
         if: matrix.os != 'windows-latest'
