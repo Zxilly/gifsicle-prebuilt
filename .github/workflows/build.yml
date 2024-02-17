@@ -1,9 +1,11 @@
 name: Build and Release
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The tag for the workflow"
+        required: true
 
 jobs:
   build:
@@ -15,28 +17,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repository: 'kohler/gifsicle'
+          repository: "kohler/gifsicle"
+          ref: ${{ github.event.inputs.tag }}
 
       - name: Windows Build
         if: matrix.os == 'windows-latest'
         shell: bash
         working-directory: ./src
         run: |
-            nmake -f Makefile.w32
-            COMMIT_HASH=$(git rev-parse --short HEAD)
-            mv gifsicle.exe ../gifsicle-windows-${COMMIT_HASH}.exe
+          nmake -f Makefile.w32
+          mv gifsicle.exe ../gifsicle-windows-${{ github.event.inputs.tag }}.exe
 
       - name: Build
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
-            ./configure --disable-gifview --disable-gifdiff
-            make
-            COMMIT_HASH=$(git rev-parse --short HEAD)
-            mv gifsicle gifsicle-${{ runner.os }}-${COMMIT_HASH}
+          ./configure --disable-gifview --disable-gifdiff
+          make
+          mv gifsicle gifsicle-${{ runner.os }}-${{ github.event.inputs.tag }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: gifsicle-${{ runner.os }}
           path: |
@@ -46,16 +47,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-        - name: Download artifacts
-          uses: actions/download-artifact@v4
-          with:
-            path: artifacts
-            merge-multiple: true
-          
-        - name: Create Release
-          uses: softprops/action-gh-release@v1
-          with:
-            tag_name: latest
-            name: "Release"
-            files: "./artifacts/*"
-            prerelease: true
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: "Release"
+          files: "./artifacts/*"
+          prerelease: true
