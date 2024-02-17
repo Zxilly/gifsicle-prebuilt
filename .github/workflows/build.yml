@@ -1,0 +1,61 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: 'kohler/gifsicle'
+
+      - name: Windows Build
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        working-directory: ./src
+        run: |
+            nmake -f Makefile.w32
+            COMMIT_HASH=$(git rev-parse --short HEAD)
+            mv gifsicle.exe ../gifsicle-windows-${COMMIT_HASH}.exe
+
+      - name: Build
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+            ./configure --disable-gifview --disable-gifdiff
+            make
+            COMMIT_HASH=$(git rev-parse --short HEAD)
+            mv gifsicle gifsicle-${{ runner.os }}-${COMMIT_HASH}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: gifsicle-${{ runner.os }}
+          path: |
+            gifsicle*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+        - name: Download artifacts
+          uses: actions/download-artifact@v4
+          with:
+            path: artifacts
+            merge-multiple: true
+          
+        - name: Create Release
+          uses: softprops/action-gh-release@v1
+          with:
+            tag_name: latest
+            name: "Release"
+            files: "./artifacts/*"
+            prerelease: true
